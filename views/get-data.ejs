@@ -1,0 +1,183 @@
+<%- layout("/layouts/boilerplate.ejs") %>
+
+<body class="bg-black text-white mb-5" >
+    <div class="center-flex position-fixed end-0 start-0 h-100 w-100 d-none " style="z-index: 1050; " id="loader">
+         <div class="spinner-border text-warning  " role="status">
+        <span class="visually-hidden">Loading...</span> 
+      </div>
+    </div>
+   
+    <div class="container mt-5 mb-5 " >
+        <h2>Your Encrypted Data</h2>
+        <input type="hidden" id="encPrivateKey" value="<%= private_key_enc %>" />
+
+        
+        <div class="mb-3">
+            <label for="password" class="form-label">Enter your password to decrypt</label>
+            <input type="password" id="password" class="form-control col-6" />
+        </div>
+
+        <button id="decryptButton" class="btn btn-primary mb-4">🔓 Decrypt All</button>
+
+
+        <div id="dataContainer" class="" id="bg_data" >
+            <% user_data.forEach((entry, index) => { %>
+                <div class="card bg-dark text-white mb-3 p-3 rounded">
+                    
+                    <h5>Type: <%= entry.type_name %></h5>
+                    <p><strong>Decrypted:</strong> <span id="decrypted-<%= index %>"><i class="bi bi-database-fill-lock text-warning" style="font-size: 20px;"></i></span></p>
+                   <div class="d-flex justify-content-end">
+                    <form method="post" action="/share-data/<%= entry.data_id%>">
+                        <button class="btn text-white" type="submit">
+                            <i class="bi bi-share"></i>
+                        </button> 
+                    </form>
+                    <form method="post" action="/data/<%= entry.data_id%>/?_method=delete">
+                        <button class="btn text-white">
+                            <i class="bi bi-trash3-fill">  </i>
+                        </button> 
+                    </form>
+                    
+
+                   </div>
+                </div>
+
+                
+      
+            <% }) %>
+        </div>
+
+    </div>
+
+    <script>
+        async function decryptPrivateKey(encryptedPrivateKeyHex, password) {
+            const [ivHex, encryptedHex] = encryptedPrivateKeyHex.split(":");
+            const iv = Uint8Array.from(ivHex.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+            const encrypted = Uint8Array.from(encryptedHex.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+
+            const key = await window.crypto.subtle.importKey(
+                "raw",
+                await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password)),
+                { name: "AES-CBC" },
+                false,
+                ["decrypt"]
+            );
+
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-CBC", iv },
+                key,
+                encrypted
+            );
+
+            return new TextDecoder().decode(decrypted);
+        }
+
+        async function importPrivateKeyFromPEM(pem) {
+            const b64 = pem
+                .replace(/-----BEGIN PRIVATE KEY-----/, "")
+                .replace(/-----END PRIVATE KEY-----/, "")
+                .replace(/\s/g, "");
+
+            const binaryDer = Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+
+            return await crypto.subtle.importKey(
+                "pkcs8",
+                binaryDer,
+                {
+                    name: "RSA-OAEP",
+                    hash: "SHA-256"
+                },
+                true,
+                ["decrypt"]
+            );
+        }
+
+        async function decryptAESKey(encryptedKeyB64, privateKey) {
+            const encryptedKey = Uint8Array.from(atob(encryptedKeyB64), c => c.charCodeAt(0));
+
+            const rawAESKey = await crypto.subtle.decrypt(
+                { name: "RSA-OAEP" },
+                privateKey,
+                encryptedKey
+            );
+
+            return await crypto.subtle.importKey(
+                "raw",
+                rawAESKey,
+                "AES-GCM",
+                true,
+                ["decrypt"]
+            );
+        }
+
+        async function decryptData(encryptedDataB64, ivB64, aesKey) {
+            const encryptedData = Uint8Array.from(atob(encryptedDataB64), c => c.charCodeAt(0));
+            const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+
+            const decrypted = await crypto.subtle.decrypt(
+                {
+                    name: "AES-GCM",
+                    iv
+                },
+                aesKey,
+                encryptedData
+            );
+
+            return new TextDecoder().decode(decrypted);
+        }
+
+        document.getElementById("decryptButton").addEventListener("click", async () => {
+            const password = document.getElementById("password").value;
+            const encPrivateKey = document.getElementById("encPrivateKey").value;
+            const loader=document.querySelector("#loader");
+            const bg_data=document.querySelector("#bg_data");
+
+            
+            try {
+                const pemPrivateKey = await decryptPrivateKey(encPrivateKey, password);
+                const rsaPrivateKey = await importPrivateKeyFromPEM(pemPrivateKey);
+
+                const userData = JSON.parse(document.getElementById("userDataJson").textContent);
+
+                
+                loader.classList.remove("d-none");
+               
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+
+            if (!password || !encPrivateKey) {
+                alert("Missing password or private key");
+                return;
+            }
+
+                for (let i = 0; i < userData.length; i++) {
+                    const item = userData[i];
+                    try {
+                        const aesKey = await decryptAESKey(item.key_enc, rsaPrivateKey);
+                        const decryptedText = await decryptData(item.encrypted_data, item.iv, aesKey);
+                        document.getElementById(`decrypted-${i}`).textContent = decryptedText;
+                    } catch (err) {
+                        console.error(`Decryption failed for item ${i}`, err);
+                        document.getElementById(`decrypted-${i}`).textContent = "Decryption failed";
+                    }
+                }
+            } catch (err) {
+                alert(" Invalid password or corrupted key");
+                console.error(err);
+            }
+            finally {
+        
+        loader.classList.add("d-none");
+    }
+        });
+
+
+ 
+
+    </script>
+<script id="userDataJson" type="application/json">
+  <%- JSON.stringify(user_data) %>
+</script>
+
+
+</body>

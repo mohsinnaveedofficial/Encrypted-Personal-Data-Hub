@@ -1,0 +1,162 @@
+<%- layout("/layouts/boilerplate.ejs") %>
+
+
+    <body>
+        <!-- login form -->
+
+
+        <div class="center-flex min-vh-100 text-white  " style="background-color:rgb(100,97,118);" id="login">
+            <div class="rounded-4 shadow-lg" style="background-color: rgb(44,38,56) ;min-height:95vh; width: 90%;">
+
+                <div class="row">
+
+                    <div class=" col-12 col-md-6 center-flex rounded-start-4"
+                        style="background-color: rgb(100, 45, 136);min-height: 50vh; height:95vh ;">
+                        <div class="text-center px-4">
+                            <h2>Welcome back! </h2>
+                            <p>Please sign in to continue to your dashboard.</p>
+                            <button class="mt-5 col-5 btn rounded-pill border-white text-white" id="register-tab">SIGN
+                                UP </button>
+                        </div>
+                    </div>
+
+
+                    <div class="col-12 col-md-6 center-flex ">
+                        <div class="row">
+                            <div class=" pt-3 text-center">
+                                <h2>Secure Login</h2>
+                                <h2>Your data is safe with us </h2>
+                            </div>
+                            <form class="mt-5 needs-validation" method="post" action="/login" novalidate>
+                                <div class="row center-flex">
+
+
+                                    <div class="col-7 mb-4">
+                                        <label class="form-label">Enter email</label>
+                                        <input class="form-control" name="login[email]" id="email" type="email"
+                                            required>
+                                    </div>
+                                    <div class="col-7">
+                                        <label class="form-label">Enter password</label>
+                                        <input class="form-control" name="login[password]" id="password" type="password"
+                                            required>
+                                    </div>
+                                    <div class="center-flex mt-4 mb-3">
+                                        <button class="btn col-4  text-white rounded-pill "
+                                            style="background-color: blueviolet;font-size: 20px;">Login</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- register form  -->
+
+
+
+        <div class="center-flex min-vh-100 text-white d-none  " style="background-color:rgb(100,97,118);" id="register">
+            <div class="rounded-4 shadow-lg" style="background-color: rgb(44,38,56) ;min-height:95vh; width: 90%;">
+
+                <div class="row">
+
+                    <div class="col-12 col-md-6 center-flex ">
+                        <div class="row">
+                            <div class=" pt-3  text-center ">
+                                <h2>Create Your Account</h2>
+                            </div>
+                            <form class="mt-5 needs-validation" method="post" action="/register" novalidate>
+                                <div class="row center-flex">
+
+
+                                    <div class="col-7 mb-4">
+                                        <label class="form-label">Enter name</label>
+                                        <input class="form-control" name="register[name]" id="name" type="text"
+                                            required>
+                                    </div>
+
+                                    <div class="col-7 mb-4">
+                                        <label class="form-label">Enter Phone Number</label>
+                                        <input class="form-control" name="register[phone_number]" id="phone_number" type="tel"
+                                            required>
+                                    </div>
+
+                                    <div class="col-7 mb-4">
+                                        <label class="form-label">Enter email</label>
+                                        <input class="form-control" name="register[email]" id="email" type="email"
+                                            required>
+                                    </div>
+
+
+
+                                    <div class="col-7 mb-4">
+                                        <label class="form-label">Enter password</label>
+                                        <input class="form-control" id="password" name="register[password]"
+                                            type="password" required>
+                                    </div>
+
+
+
+                                    <div class="col-7">
+                                        <label class="form-label">Enter confirm password</label>
+                                        <input class="form-control" id="confirmpassword"
+                                            name="register[confirmpassword]" type="password" required>
+                                    </div>
+                                    <div class="center-flex mt-4 mb-3">
+                                        <button class="btn col-4 text-white rounded-pill"
+                                            style="background-color: blueviolet;font-size: 20px;">Register</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+
+
+                    </div>
+
+
+                    <div class=" col-12 col-md-6 center-flex rounded-end-4"
+                        style="background-color: rgb(100, 45, 136);min-height: 50vh; height:95vh ;">
+                        <div class="text-center px-4">
+                            <h2>Join Us!</h2>
+                            <p>Create an account to get started and explore all that we have to offer.</p>
+                            <button class="mt-5 col-5 text-center btn rounded-pill border-white text-white"
+                                id="login-tab">SIGN IN</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+
+            let loginside = document.getElementById("login");
+            let registerside = document.getElementById("register");
+            let loginbtn = document.getElementById("login-tab");
+            let registerbtn = document.getElementById("register-tab");
+
+            loginbtn.addEventListener("click", () => {
+                loginside.classList.remove("d-none");
+                registerside.classList.add("d-none");
+
+            })
+            registerbtn.addEventListener("click", () => {
+
+
+                loginside.classList.add("d-none");
+                registerside.classList.remove("d-none");
+            })
+
+
+
+        </script>
+    </body>

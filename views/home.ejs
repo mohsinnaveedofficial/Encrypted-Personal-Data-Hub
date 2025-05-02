@@ -1,0 +1,59 @@
+<%- layout("/layouts/boilerplate.ejs") %>
+
+    <body class="bg-black text-white ">
+
+        <div class="row">
+            <div>
+
+
+                <h2 class="text-info center-flex mt-5 "> Welcome <%= data.name %> to Your Secure Vault </h2><br>
+                <div class="center-flex ">
+                    <p class="col-4 text-center mb-4 ">
+                        A decentralized system where you own your data. End-to-end encrypted storage and privacy-first
+                        architecture.
+                    </p><br>
+                </div>
+                
+                <div class="center-flex">
+                    <a class="btn btn-primary rounded-pill" href="/get-data">Access Your Data</a><br>
+
+                </div>
+            </div>
+
+            <section class="center-flex mt-5 ">
+                <div class="row col-12 gap-3 ms-3 d-flex justify-content-evenly">
+
+                    <div class="card col-3 custom-shadow  bg-dark text-white rounded-5  p-4">
+                        <h3 class="card-text text-primary text-center"> AES + RSA Encryption </h3>
+                        <p  class="text-center">Your data is encrypted with AES, and keys protected using RSA. Only you can decrypt it. </p>
+                    </div>
+
+                    <div class="card col-3 bg-dark custom-shadow text-white rounded-5 p-4 ">
+                        <h3 class="card-text text-primary text-center"> Zero Knowledge Access </h3>
+                        <p   class="text-center">Even the server can’t view your information. Private keys stay in your hands. </p>
+                    </div>
+
+
+
+                    <div class="card col-3 custom-shadow bg-dark text-white rounded-5 p-4">
+                        <h3 class="card-text text-primary text-center"> Data Control </h3>
+                        <p class="text-center">You choose what gets stored and who can access it — simple, secure, and user-owned. </p>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+
+
+
+
+
+
+        </div>
+
+
+        <script>
+
+        </script>
+    </body>

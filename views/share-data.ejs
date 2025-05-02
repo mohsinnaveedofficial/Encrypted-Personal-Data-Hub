@@ -1,0 +1,34 @@
+<%- layout("/layouts/boilerplate.ejs") %>
+
+
+<body class="bg-black text-white mb-5">
+<div>
+<div class="d-flex justify-content-center align-items-center">
+
+   
+
+   
+<div class="col-6 mt-5 ">
+    <form method="post" action="/send-share-data/<%=id%>">
+        <div class="mt-5">
+             <label class="form-label" >Enter the receptionist</label>
+        <input class="form-control rounded-pill" name="receptionist_email" id="receptionist_email" type="email">
+
+        </div>
+         
+       <div class="mt-4">
+        <label class="form-label">Enter your password</label>
+        <input class="form-control rounded-pill" type="password" name="password" id="password">
+    
+    </div>
+        <div class="center-flex mt-4">
+            <button class="btn btn-primary"> Find and send </button>
+        </div>
+    </form>
+
+        </div>
+ </div>
+
+</div>
+
+</body>

@@ -1,0 +1,19 @@
+
+.nav{
+background-color: black;
+color: white;
+
+}
+
+.center-flex{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-shadow{
+    box-shadow: 4px 2px 6px rgba(0, 204, 255, 0.5);
+}
+.blur{
+    filter: blur(7px);
+}

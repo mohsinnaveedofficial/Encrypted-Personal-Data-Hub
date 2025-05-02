@@ -1,0 +1,175 @@
+<%- layout("/layouts/boilerplate.ejs") %>
+
+    <body class="bg-black text-white">
+        <div class="center-flex">
+            <form id="dataForm">
+                <div class="col-6 mt-5">
+                    <div class="d-none"  id="user_id"> <%= user_id%></div>
+                    <label class="form-label">Enter Data Type</label>
+                    <select class="form-select rounded-2" id="type" name="type">
+                        <% for (let _data of data) { %>
+                            <option value="<%= _data.data_id %>" selected>
+                                <%= _data.type_name %>
+                            </option>
+                            <% } %>
+                    </select>
+                </div>
+
+                <div class="col-10 mt-3">
+                    <label class="form-label">Your data</label><br>
+                    <textarea class="form-control" placeholder="Write your personal info here" rows="6" cols="50"
+                        id="data" name="data"></textarea>
+                </div>
+
+                <div class="col-10 center-flex mt-4">
+                    <button class="btn btn-secondary col-4 rounded-pill" id="submitButton" >Save</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
+            }
+
+            const publicKeyPem = getCookie("public_key");
+            console.log(publicKeyPem);
+            const user_id = document.getElementById("user_id").textContent.trim();
+
+            console.log("user_id", user_id);
+
+            async function importPublicKey(pemEncoded) {
+                try {
+                    if (!pemEncoded || typeof pemEncoded !== 'string') {
+                        throw new Error("Invalid PEM format: not a string");
+                    }
+
+                    const pem = decodeURIComponent(pemEncoded);
+
+                    console.log("Decoded PEM:\n", pem);
+
+                    const cleanedPem = pem
+                        .replace(/-----BEGIN PUBLIC KEY-----/g, '')
+                        .replace(/-----END PUBLIC KEY-----/g, '')
+                        .replace(/\s+/g, '');
+
+                    console.log("Cleaned Base64 PEM:", cleanedPem);
+
+                    const binaryDer = window.atob(cleanedPem);
+                    const binaryDerBuffer = new Uint8Array([...binaryDer].map(ch => ch.charCodeAt(0))).buffer;
+
+                    return await window.crypto.subtle.importKey(
+                        "spki",
+                        binaryDerBuffer,
+                        {
+                            name: "RSA-OAEP",
+                            hash: "SHA-256"
+                        },
+                        true,
+                        ["encrypt"]
+                    );
+                } catch (error) {
+                    console.error("Error importing public key:", error);
+                    throw error;
+                }
+            }
+            async function generateAESKey() {
+                return await window.crypto.subtle.generateKey(
+                    {
+                        name: "AES-GCM",
+                        length: 256
+                    },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+            }
+
+            async function encryptDataWithAES(aesKey, data) {
+                const encoder = new TextEncoder();
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const encrypted = await window.crypto.subtle.encrypt(
+                    {
+                        name: "AES-GCM",
+                        iv: iv
+                    },
+                    aesKey,
+                    encoder.encode(data)
+                );
+
+                return {
+                    encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+                    iv: btoa(String.fromCharCode(...iv))
+                };
+            }
+
+            async function encryptAESKeyWithRSA(publicKey, aesKey) {
+                const rawKey = await window.crypto.subtle.exportKey("raw", aesKey);
+                const encryptedKey = await window.crypto.subtle.encrypt(
+                    { name: "RSA-OAEP" },
+                    publicKey,
+                    rawKey
+                );
+
+                return btoa(String.fromCharCode(...new Uint8Array(encryptedKey)));
+            }
+
+            async function encryptAndSend(data, type_id) {
+                if (!publicKeyPem || !user_id) {
+                    alert("User not logged in. Please log in first.");
+                    return;
+                }
+
+                try {
+                    const publicKey = await importPublicKey(publicKeyPem);
+                    const aesKey = await generateAESKey();
+                    const { encrypted, iv } = await encryptDataWithAES(aesKey, data);
+                    const encryptedAESKey = await encryptAESKeyWithRSA(publicKey, aesKey);
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/add-data';
+
+                    const hiddenFields = [
+                        { name: 'user_id', value: user_id },
+                        { name: 'type', value: type_id },
+                        { name: 'encrypted_data', value: encrypted },
+                        { name: 'iv', value: iv },
+                        { name: 'key_enc', value: encryptedAESKey }
+                    ];
+
+                    hiddenFields.forEach(({ name, value }) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = value;
+                        form.appendChild(input);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
+                } catch (err) {
+                    console.error("Encryption or sending failed:", err);
+                    alert("Error: " + err.message);
+                }
+            }
+
+            // Handle Save button click
+            document.getElementById("submitButton").addEventListener("click", async (e) => {
+                e.preventDefault();
+
+                const data = document.getElementById("data").value;
+                const type_id = document.getElementById("type").value;
+
+                if (!data || !type_id) {
+                    alert("Please enter data and select a type.");
+                    return;
+                }
+
+                encryptAndSend(data, parseInt(type_id));
+            });
+        </script>
+
+    </body>
